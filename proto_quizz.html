@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Révision Biblique — Texte ↔ Référence</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    button { margin-top: 15px; padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #0056d2; }
+    .small-btn { padding: 7px 12px; font-size: 14px; margin-right: 5px; }
+    .feedback { padding: 10px; border-radius: 8px; margin-top: 10px; color: white; font-weight: bold; }
+    .correct { background-color: #28a745; }
+    .incorrect { background-color: #dc3545; }
+    #progress { margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="cards card">
+    <h2>Choisir un thème</h2>
+    <select id="themeSelect" onchange="applyTheme()">
+      <option value="all">Tous</option>
+      <option value="Lire la Bible">Lire la Bible</option>
+      <option value="Être sauvé en Christ">Être sauvé en Christ</option>
+      <option value="L'amour de Dieu">L'amour de Dieu</option>
+      <option value="La divinité de Christ">La divinité de Christ</option>
+      <option value="La nouvelle naissance">La nouvelle naissance</option>
+      <option value="Transformé par Dieu">Transformé par Dieu</option>
+      <option value="L'écoute de l'Esprit">L'écoute de l'Esprit</option>
+      <option value="L'adoration">L'adoration</option>
+      <option value="L'exaucement des prières">L'exaucement des prières</option>
+      <option value="Aimer les autres">Aimer les autres</option>
+      <option value="S'encourager les uns les autres">S'encourager les uns les autres</option>
+      <option value="Pardonner aux autres">Pardonner aux autres</option>
+      <option value="La victoire sur le péché">La victoire sur le péché</option>
+      <option value="Baptême et plénitude du Saint-Esprit">Baptême et plénitude du Saint-Esprit</option>
+      <option value="La guérison divine">La guérison divine</option>
+      <option value="Victoire sur les puissances des ténèbres">Victoire sur les puissances des ténèbres</option>
+      <option value="Plus que vainqueur">Plus que vainqueur</option>
+      <option value="Église dans les lieux célestes">Église dans les lieux célestes</option>
+      <option value="Allez évangéliser">Allez évangéliser</option>
+      <option value="Organisation de l'Église">Organisation de l'Église</option>
+      <option value="Retour de Jésus et fin des temps">Retour de Jésus et fin des temps</option>
+    </select>
+
+    <h2>Mode de révision</h2>
+    <button onclick="setMode('refToText')">Référence ➜ Texte</button>
+    <button onclick="setMode('textToRef')">Texte ➜ Référence</button>
+
+    <h2 id="question"></h2>
+    <div id="answers"></div>
+    <button id="nextBtn" style="display:none;">Suivant</button>
+    <div id="progress"></div>
+  </div>
+
+<script>
+let cards = [
+  // 1. Lire la Bible
+  {"text": "Ta parole est une lampe à mon pied, et une lumière à mon sentier.", "reference": "Psaume 119:105", "theme": "Lire la Bible", "strength": 1},
+  {"text": "L'homme ne vivra pas de pain seulement, mais de toute parole qui sort de la bouche de Dieu.", "reference": "Matthieu 4:4", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Que ce livre de la loi ne s'éloigne point de ta bouche, et médite-le jour et nuit, afin que tu prennes garde à faire selon tout ce qui y est écrit ; car alors tu feras réussir tes voies, et alors tu prospéreras.", "reference": "Josué 1:8", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Tes paroles se sont-elles trouvées, je les ai dévorées ; et tes paroles ont été pour moi l'allégresse et la joie de mon cœur, car je suis appelé de ton nom.", "reference": "Jérémie 15:16", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Quiconque donc entend mes paroles et les met en pratique, je le comparerai à un homme prudent qui a bâti sa maison sur le roc.", "reference": "Matthieu 7:24", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Je veille sur ma parole pour l'exécuter.", "reference": "Jérémie 1:12", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Ma parole n'est-elle pas comme un feu, dit l'Éternel, et comme un marteau qui brise le roc ?", "reference": "Jérémie 23:29", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Le ciel et la terre passeront, mais mes paroles ne passeront point.", "reference": "Matthieu 24:35", "theme": "Lire la Bible", "strength": 1},
+  {"text": "L'herbe est desséchée, la fleur est fanée, mais la Parole de notre Dieu demeure éternellement.", "reference": "Ésaïe 40:8", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Vous n'ajouterez rien à la parole que je vous commande, et vous n'en retrancherez rien, afin de garder les commandements de l'Éternel, votre Dieu.", "reference": "Deutéronome 4:2", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Mettez la Parole en pratique, et ne l'écoutez pas seulement, vous séduisant vous-mêmes.", "reference": "Jacques 1:22", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Bienheureux sont ceux qui écoutent la parole de Dieu et qui la gardent.", "reference": "Luc 11:28", "theme": "Lire la Bible", "strength": 1},
+  {"text": "J'ai caché ta parole dans mon cœur, afin que je ne pèche pas contre toi.", "reference": "Psaume 119:11", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Ainsi la foi vient de ce qu'on entend, et ce qu'on entend par la parole de Dieu.", "reference": "Romains 10:17", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Toutes les choses qui ont été écrites auparavant ont été écrites pour notre instruction, afin que, par la patience et par la consolation des Écritures, nous ayons espérance.", "reference": "Romains 15:4", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Mes pensées ne sont pas vos pensées, et vos voies ne sont pas mes voies, dit l'Éternel.", "reference": "Ésaïe 55:8-9", "theme": "Lire la Bible", "strength": 1},
+  {"text": "Toute Écriture est inspirée de Dieu, et utile pour enseigner, convaincre, corriger, instruire dans la justice.", "reference": "2 Timothée 3:16-17", "theme": "Lire la Bible", "strength": 1},
+
+  // 2. Être sauvé en Christ
+  {"text": "Car il n'y a pas de différence, car tous ont péché et sont privés de la gloire de Dieu.", "reference": "Romains 3:23", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Le cœur est trompeur par-dessus tout, et incurable ; qui le connaît ? Moi, l'Éternel, je sonde le cœur.", "reference": "Jérémie 17:9", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Mon peuple a changé sa gloire contre ce qui n'est d'aucun profit.", "reference": "Jérémie 2:11", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Ils m'ont abandonné, moi, la source des eaux vives, pour se creuser des citernes crevassées qui ne retiennent pas l'eau.", "reference": "Jérémie 2:13", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Moi, je suis le chemin, la vérité et la vie ; nul ne vient au Père que par moi.", "reference": "Jean 14:6", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Car Dieu est un, et le médiateur entre Dieu et les hommes est un, l'homme Christ Jésus.", "reference": "1 Timothée 2:5-6", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Vous avez été rachetés… non par des choses corruptibles… mais par le sang précieux de Christ.", "reference": "1 Pierre 1:18-19", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Moi, je suis le pain de vie ; celui qui vient à moi n'aura jamais faim.", "reference": "Jean 6:35", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Moi, je suis la lumière du monde ; celui qui me suit ne marchera point dans les ténèbres.", "reference": "Jean 8:12", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Le salaire du péché, c'est la mort ; mais le don gratuit de Dieu, c'est la vie éternelle.", "reference": "Romains 6:23", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Ayant donc été justifiés par la foi, nous avons la paix avec Dieu.", "reference": "Romains 5:1", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Je vous ai écrit ces choses afin que vous sachiez que vous avez la vie éternelle.", "reference": "1 Jean 5:13", "theme": "Être sauvé en Christ", "strength": 1},
+  {"text": "Ces choses sont écrites afin que vous croyiez que Jésus est le Christ.", "reference": "Jean 20:31", "theme": "Être sauvé en Christ", "strength": 1},
+
+  // 3. L'amour de Dieu
+  {"text": "Dieu est amour.", "reference": "1 Jean 4:8", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Voyez de quel amour le Père nous a fait don, que nous soyons appelés enfants de Dieu.", "reference": "1 Jean 3:1", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Mais Dieu prouve son amour à nous envers nous, en ce que, lorsque nous étions encore pécheurs, Christ est mort pour nous.", "reference": "Romains 5:8", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Nous l'aimons parce qu'il nous a aimés le premier.", "reference": "1 Jean 4:19", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "En ceci a été manifesté l'amour de Dieu pour nous, c'est que Dieu a envoyé son Fils unique dans le monde, afin que nous vivions par lui.", "reference": "1 Jean 4:9-10", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "L'Éternel est bon envers tous, et ses compassions sont sur toutes ses œuvres.", "reference": "Psaume 145:9", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Et pour vous, les cheveux même de votre tête sont tous comptés.", "reference": "Matthieu 10:30", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Voici, je t'ai gravée sur les paumes de mes mains ; tes murs sont continuellement devant moi.", "reference": "Ésaïe 49:16", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Il prit soin de lui, Il le garda comme la prunelle de Son œil.", "reference": "Deutéronome 32:10", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Tu comptes mes allées et mes venues ; mets mes larmes dans Tes vaisseaux ; ne sont-elles pas dans Ton livre ?", "reference": "Psaume 56:8", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "Et vous téterez, vous serez portés sur les bras et caressés sur les genoux.", "reference": "Ésaïe 66:12", "theme": "L'amour de Dieu", "strength": 1},
+  {"text": "L'Éternel, ton Dieu, au milieu de toi, est puissant ; il sauvera ; il gambadera de joie à ton sujet : il se reposera dans son amour, il s'égayera en toi avec chant de triomphe.", "reference": "Sophonie 3:17", "theme": "L'amour de Dieu", "strength": 1},
+
+  // 4. La divinité de Christ
+  {"text": "En Lui habite toute la plénitude de la déité corporellement.", "reference": "Colossiens 2:9", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Car, en Lui, toute la plénitude s'est plu à habiter.", "reference": "Colossiens 1:19-20", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Au commencement était la Parole ; et la Parole était auprès de Dieu ; et la Parole était Dieu.", "reference": "Jean 1:1", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Car un enfant nous est né, un fils nous a été donné, et le gouvernement sera sur son épaule ; et on appellera son nom : Merveilleux, Conseiller, Dieu fort, Père d'éternité, Prince de paix.", "reference": "Ésaïe 9:6", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Auxquels sont les pères, et desquels, selon la chair, est issu le Christ, qui est sur toutes choses Dieu béni éternellement. Amen !", "reference": "Romains 9:5", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Lequel, étant en forme de Dieu, n'a pas regardé comme un objet à ravir d'être égal à Dieu, mais s'est anéanti Lui-même, prenant la forme d'esclave, étant fait à la ressemblance des hommes.", "reference": "Philippiens 2:6-7", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Car par lui ont été créées toutes choses, les choses qui sont dans les cieux et les choses qui sont sur la terre, les visibles et les invisibles, soit trônes, ou seigneuries, ou principautés, ou autorités : toutes choses ont été créées par lui et pour lui ; et lui est avant toutes choses, et toutes choses subsistent par lui.", "reference": "Colossiens 1:16-17", "theme": "La divinité de Christ", "strength": 1},
+  {"text": "Thomas répondit et lui dit : Mon Seigneur et mon Dieu !", "reference": "Jean 20:28", "theme": "La divinité de Christ", "strength": 1},
+
+  // 5. La nouvelle naissance
+  {"text": "Jésus répondit et lui dit : En vérité, en vérité, je te dis : Si quelqu'un n'est né de nouveau, il ne peut voir le royaume de Dieu.", "reference": "Jean 3:3", "theme": "La nouvelle naissance", "strength": 1},
+  {"text": "Quiconque croit que Jésus est le Christ, est né de Dieu.", "reference": "1 Jean 5:1", "theme": "La nouvelle naissance", "strength": 1},
+  {"text": "En sorte que si quelqu'un est en Christ, c'est une nouvelle création : les choses vieilles sont passées ; voici, toutes choses sont faites nouvelles.", "reference": "2 Corinthiens 5:17", "theme": "La nouvelle naissance", "strength": 1},
+  {"text": "Mais le fruit de l'Esprit est l'amour, la joie, la paix, la patience, la bienveillance, la bonté, la fidélité, la douceur, la maîtrise de soi.", "reference": "Galates 5:22", "theme": "La nouvelle naissance", "strength": 1},
+  {"text": "Ne savez-vous pas que vous êtes le temple de Dieu et que l'Esprit de Dieu habite en vous ?", "reference": "1 Corinthiens 3:16", "theme": "La nouvelle naissance", "strength": 1},
+
+  // 6. Transformé par Dieu
+  {"text": "Or nous tous, contemplant à face découverte la gloire du Seigneur, nous sommes transformés en la même image, de gloire en gloire, comme par le Seigneur en Esprit.", "reference": "2 Corinthiens 3:18", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Tu me feras connaître le chemin de la vie ; ta face est un rassasiement de joie, il y a des plaisirs à ta droite pour toujours.", "reference": "Psaume 16:12", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Car de sa plénitude, nous tous avons reçu, et grâce sur grâce.", "reference": "Jean 1:16", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Or la loi est intervenue afin que la faute abondât ; mais là où le péché abondait, la grâce a surabondé.", "reference": "Romains 5:20", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Étant fortifiés en toute force, selon la puissance de sa gloire, pour toute patience et constance, avec joie.", "reference": "Colossiens 1:11", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Afin que, selon les richesses de sa gloire, il vous donne d'être fortifiés en puissance par son Esprit, quant à l'homme intérieur.", "reference": "Éphésiens 3:16", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Au jour que j'ai crié, tu m'as répondu ; tu as augmenté la force de mon âme.", "reference": "Psaume 138:3", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "L'Éternel est mon berger : je ne manquerai de rien. Il me fait reposer dans de verts pâturages, il me mène à des eaux paisibles. Il restaure mon âme.", "reference": "Psaume 23:1-3", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Réjouissez-vous toujours dans le Seigneur ; encore une fois, je vous le dirai : réjouissez-vous.", "reference": "Philippiens 4:4", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Jésus donc dit aux Juifs qui avaient cru en lui : Si vous persévérez dans ma parole, vous êtes vraiment mes disciples ; et vous connaîtrez la vérité, et la vérité vous affranchira.", "reference": "Jean 8:31-32", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Béni l'homme qui se confie en l'Éternel, et de qui l'Éternel est la confiance ! Il sera comme un arbre planté près des eaux ; et il étendra ses racines vers le courant ; et il ne s'apercevra pas quand la chaleur viendra, et sa feuille sera toujours verte ; et dans l'année de la sécheresse il ne craindra pas, et il ne cessera de porter du fruit.", "reference": "Jérémie 17:7-8", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Détruisant les raisonnements et toute hauteur qui s'élève contre la connaissance de Dieu, et amenant toute pensée captive à l'obéissance du Christ.", "reference": "2 Corinthiens 10:5", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Et ayant appelé la foule avec ses disciples, il leur dit : Quiconque veut venir après moi, qu'il renonce à lui-même, et qu'il prenne sa croix, et me suive ; car quiconque voudra sauver sa vie la perdra ; et quiconque perdra sa propre vie pour l'amour de moi et de l'Évangile la sauvera.", "reference": "Marc 8:34-35", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Car Dieu ne nous a pas donné un esprit de crainte, mais de puissance, d'amour et de sagesse.", "reference": "2 Timothée 1:7", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Et quoi que vous fassiez, en parole ou en œuvre, faites tout au nom du Seigneur Jésus, rendant grâces par lui à Dieu le Père.", "reference": "Colossiens 3:17", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Soit donc que vous mangiez, soit que vous buviez, ou quoi que vous fassiez, faites tout pour la gloire de Dieu.", "reference": "1 Corinthiens 10:31", "theme": "Transformé par Dieu", "strength": 1},
+  {"text": "Béni soit le Dieu et Père de notre Seigneur Jésus-Christ, qui nous a bénis de toute bénédiction spirituelle dans les lieux célestes en Christ.", "reference": "Éphésiens 1:3", "theme": "Transformé par Dieu", "strength": 1},
+
+  // 7. L'écoute de l'Esprit
+  {"text": "Car la pensée de la chair est la mort ; mais la pensée de l'Esprit est vie et paix.", "reference": "Romains 8:6", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Et que la paix du Christ, à laquelle aussi vous avez été appelés en un seul corps, préside dans vos cœurs ; et soyez reconnaissants.", "reference": "Colossiens 3:15", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Et la paix de Dieu, laquelle surpasse toute intelligence, gardera vos cœurs et vos pensées dans le Christ Jésus.", "reference": "Philippiens 4:7", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Tu garderas dans une paix parfaite l'esprit qui s'appuie sur toi, car il se confie en toi.", "reference": "Ésaïe 26:3", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Car vous sortirez avec joie, et vous serez conduits en paix ; les montagnes et les collines éclateront devant vous en chants de triomphe, et tous les arbres des champs battront des mains.", "reference": "Ésaïe 55:12", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Mais le Consolateur, l'Esprit Saint, que le Père enverra en mon nom, vous enseignera toutes choses et vous rappellera toutes les choses que je vous ai dites.", "reference": "Jean 14:26", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Et vous, vous avez l'onction de la part du Saint et vous connaissez toutes choses.", "reference": "1 Jean 3:20", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Mais celui qui est spirituel discerne toutes choses.", "reference": "1 Corinthiens 2:15", "theme": "L'écoute de l'Esprit", "strength": 1},
+  {"text": "Car qui s'est tenu dans le conseil secret de l'Éternel, en sorte qu'il ait vu et entendu sa parole ? Qui a été attentif à sa parole, et a écouté ?", "reference": "Jérémie 23:18", "theme": "L'écoute de l'Esprit", "strength": 1},
+
+  // 8. L'adoration
+  {"text": "Mon âme, bénis l'Éternel ! Éternel, mon Dieu, tu es merveilleusement grand, tu es revêtu de majesté et de magnificence !", "reference": "Psaume 104:1", "theme": "L'adoration", "strength": 1},
+  {"text": "La majesté et la magnificence sont devant lui, la force et la joie sont dans le lieu où il habite. Familles des peuples, rendez à l'Éternel la gloire et la force !", "reference": "1 Chroniques 16:27-28", "theme": "L'adoration", "strength": 1},
+  {"text": "Et tu aimeras le Seigneur ton Dieu de tout ton cœur, de toute ton âme, de toute ta pensée et de toute ta force.", "reference": "Marc 12:30", "theme": "L'adoration", "strength": 1},
+  {"text": "Poussez des cris de joie vers l'Éternel, toute la terre ; éclatez d'allégresse, et exultez avec chant de triomphe, et psalmodiez !", "reference": "Psaume 98:4", "theme": "L'adoration", "strength": 1},
+  {"text": "Poussez des cris de joie vers l'Éternel, toute la terre ! Servez l'Éternel avec joie, venez devant lui avec des chants de triomphe.", "reference": "Psaume 100:1-2", "theme": "L'adoration", "strength": 1},
+  {"text": "Battez des mains, vous tous les peuples ; poussez des cris de joie vers Dieu avec une voix de triomphe.", "reference": "Psaume 47:1", "theme": "L'adoration", "strength": 1},
+  {"text": "Je bénirai l'Éternel en tout temps ; sa louange sera continuellement dans ma bouche.", "reference": "Psaume 34:1", "theme": "L'adoration", "strength": 1},
+  {"text": "Magnifiez l'Éternel avec moi, et exaltons ensemble son nom.", "reference": "Psaume 34:3", "theme": "L'adoration", "strength": 1},
+  {"text": "Je te célébrerai dans la grande assemblée, je te louerai au milieu d'un grand peuple.", "reference": "Psaume 35:18", "theme": "L'adoration", "strength": 1},
+  {"text": "Celui qui habite dans la demeure secrète du Très-Haut logera à l'ombre du Tout-Puissant.", "reference": "Psaume 91:1", "theme": "L'adoration", "strength": 1},
+  {"text": "Que tout ce qui respire loue l'Éternel ! Louez l'Éternel !", "reference": "Psaume 150:6", "theme": "L'adoration", "strength": 1},
+
+  // 9. L'exaucement des prières
+  {"text": "Mais mon Dieu suppléera à tous vos besoins selon ses richesses en gloire par le Christ Jésus.", "reference": "Philippiens 4:19", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Tout ce que vous demanderez en priant, croyez que vous le recevrez, et il vous sera fait.", "reference": "Marc 11:24", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Et quoi que vous demandiez en mon nom, je le ferai, afin que le Père soit glorifié dans le Fils.", "reference": "Jean 14:13", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Si vous demandez quelque chose en mon nom, moi, je le ferai.", "reference": "Jean 14:14", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Le Seigneur est proche ; ne vous inquiétez de rien, mais en toutes choses, exposez vos requêtes à Dieu par des prières et des supplications avec des actions de grâces ; et la paix de Dieu, laquelle surpasse toute intelligence, gardera vos cœurs et vos pensées dans le Christ Jésus.", "reference": "Philippiens 4:6-7", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Crie vers moi, et je te répondrai, et je te déclarerai des choses grandes et cachées que tu ne sais pas.", "reference": "Jérémie 33:3", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Il m'invoquera, et je lui répondrai ; dans la détresse je serai avec lui ; je le délivrerai et le glorifierai.", "reference": "Psaume 91:15", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Et il arrivera que, avant qu'ils crient, je répondrai, et pendant qu'ils parlent, j'exaucerai.", "reference": "Ésaïe 65:24", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Et c'est ici la confiance que nous avons en lui, que si nous demandons quelque chose selon sa volonté, il nous écoute ; et si nous savons qu'il nous écoute, quoi que ce soit que nous demandions, nous savons que nous avons les choses que nous lui avons demandées.", "reference": "1 Jean 5:14-15", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Celui même qui n'a pas épargné son propre Fils, mais qui l'a livré pour nous tous, comment ne nous fera-t-il pas don aussi, librement, de toutes choses avec lui ?", "reference": "Romains 8:32", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "C'est moi qui vous ai choisis et qui vous ai établis, afin que vous alliez, et que vous portiez du fruit, et que votre fruit demeure ; afin que tout ce que vous demanderez au Père en mon nom, il vous le donne.", "reference": "Jean 15:16", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "En toutes choses rendez grâces, car telle est la volonté de Dieu dans le Christ Jésus à votre égard.", "reference": "1 Thessaloniciens 5:18", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Mais toi, quand tu pries, entre dans ta chambre, et ayant fermé ta porte, prie ton Père qui demeure dans le secret ; et ton Père qui voit dans le secret, te récompensera.", "reference": "Matthieu 6:6", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Je vous dis encore que si deux d'entre vous sont d'accord sur la terre pour une chose quelconque, quelle que soit la chose qu'ils demanderont, elle sera faite pour eux par mon Père qui est dans les cieux.", "reference": "Matthieu 18:19", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Demandez, et il vous sera donné ; cherchez, et vous trouverez ; heurtez, et il vous sera ouvert.", "reference": "Matthieu 7:7", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Crois ! Toutes choses sont possibles à celui qui croit.", "reference": "Marc 9:23", "theme": "L'exaucement des prières", "strength": 1},
+  {"text": "Or, à celui qui peut faire infiniment plus que tout ce que nous demandons ou pensons, selon la puissance qui opère en nous, à lui gloire dans l'assemblée dans le Christ Jésus, pour toutes les générations des siècles des siècles ! Amen.", "reference": "Éphésiens 3:20-21", "theme": "L'exaucement des prières", "strength": 1},
+
+  // 10. Aimer les autres
+  {"text": "Je vous donne un commandement nouveau, que vous vous aimiez l'un l'autre ; comme je vous ai aimés, que vous vous aimiez l'un l'autre.", "reference": "Jean 13:34", "theme": "Aimer les autres", "strength": 1},
+  {"text": "À ceci tous connaîtront que vous êtes mes disciples, si vous avez de l'amour entre vous.", "reference": "Jean 13:35", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Bien-aimés, si Dieu nous a aimés ainsi, nous aussi nous devons nous aimer l'un l'autre.", "reference": "1 Jean 4:11", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Tu aimeras le Seigneur ton Dieu de tout ton cœur, et de toute ton âme, et de toute ta force, et de toute ta pensée et ton prochain comme toi-même.", "reference": "Luc 10:27", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Quant à l'amour fraternel, soyez pleins d'affection les uns pour les autres ; quant à l'honneur, étant les premiers à le rendre aux autres.", "reference": "Romains 12:10", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Que votre douceur soit connue de tous les hommes.", "reference": "Philippiens 4:5", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Que toutes choses parmi vous se fassent dans l'amour.", "reference": "1 Corinthiens 16:14", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Ne rendant pas mal pour mal, ou outrage pour outrage, mais au contraire bénissant, parce que vous avez été appelés à ceci, c'est que vous héritiez de la bénédiction.", "reference": "1 Pierre 3:9-10", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Toutes les choses donc que vous voulez que les hommes vous fassent, faites-les-leur, vous aussi, de même ; car c'est là la loi et les prophètes.", "reference": "Matthieu 7:12", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Mais moi, je vous dis : Aimez vos ennemis, bénissez ceux qui vous maudissent, faites du bien à ceux qui vous haïssent, et priez pour ceux qui vous font du tort et vous persécutent.", "reference": "Matthieu 5:44", "theme": "Aimer les autres", "strength": 1},
+  {"text": "Mais à vous qui écoutez, je vous dis : Aimez vos ennemis ; faites du bien à ceux qui vous haïssent ; bénissez ceux qui vous maudissent ; priez pour ceux qui vous font du tort.", "reference": "Luc 6:27-28", "theme": "Aimer les autres", "strength": 1},
+
+  // 11. S'encourager les uns les autres
+  {"text": "C'est pourquoi exhortez-vous l'un l'autre et édifiez-vous l'un l'autre, chacun en particulier, comme aussi vous le faites.", "reference": "1 Thessaloniciens 5:11", "theme": "S'encourager les uns les autres", "strength": 1},
+  {"text": "Mais exhortez-vous l'un l'autre chaque jour, aussi longtemps qu'il est dit : 'Aujourd'hui', afin qu'aucun d'entre vous ne s'endurcisse par la séduction du péché.", "reference": "Hébreux 3:13", "theme": "S'encourager les uns les autres", "strength": 1},
+  {"text": "Qu'aucune parole déshonnête ne sorte de votre bouche, mais celle qui est bonne, propre à l'édification selon le besoin, afin qu'elle communique la grâce à ceux qui l'entendent.", "reference": "Éphésiens 4:29-30", "theme": "S'encourager les uns les autres", "strength": 1},
+  {"text": "Et prenons garde les uns aux autres pour nous exciter à l'amour et aux bonnes œuvres.", "reference": "Hébreux 10:24", "theme": "S'encourager les uns les autres", "strength": 1},
+  {"text": "Que la parole du Christ habite en vous, richement, en toute sagesse, vous enseignant et vous exhortant les uns les autres, par des psaumes, des hymnes, des cantiques spirituels, chantant de vos cœurs à Dieu dans un esprit de grâce.", "reference": "Colossiens 3:16", "theme": "S'encourager les uns les autres", "strength": 1},
+
+  // 12. Pardonner aux autres
+  {"text": "Mais moi, je vous dis : Aimez vos ennemis, bénissez ceux qui vous maudissent, faites du bien à ceux qui vous haïssent, et priez pour ceux qui vous font du tort et vous persécutent.", "reference": "Matthieu 5:44", "theme": "Pardonner aux autres", "strength": 1},
+  {"text": "Mais à vous qui écoutez, je vous dis : Aimez vos ennemis ; faites du bien à ceux qui vous haïssent ; bénissez ceux qui vous maudissent ; priez pour ceux qui vous font du tort.", "reference": "Luc 6:27-28", "theme": "Pardonner aux autres", "strength": 1},
+  {"text": "Et quand vous ferez votre prière, si vous avez quelque chose contre quelqu'un, pardonnez-lui, afin que votre Père aussi, qui est dans les cieux, vous pardonne vos fautes.", "reference": "Marc 11:25", "theme": "Pardonner aux autres", "strength": 1},
+  {"text": "Mais soyez bons les uns envers les autres, compatissants, vous pardonnant les uns aux autres comme Dieu aussi, en Christ, vous a pardonné.", "reference": "Éphésiens 4:32", "theme": "Pardonner aux autres", "strength": 1},
+
+  // 13. La victoire sur le péché
+  {"text": "Je puis toutes choses en celui qui me fortifie.", "reference": "Philippiens 4:13", "theme": "La victoire sur le péché", "strength": 1},
+  {"text": "Il n'y a donc maintenant aucune condamnation pour ceux qui sont dans le Christ Jésus ; car la loi de l'Esprit de vie dans le Christ Jésus m'a affranchi de la loi du péché et de la mort.", "reference": "Romains 8:1-2", "theme": "La victoire sur le péché", "strength": 1},
+  {"text": "Car le péché ne dominera pas sur vous, parce que vous n'êtes pas sous la loi, mais sous la grâce.", "reference": "Romains 6:14", "theme": "La victoire sur le péché", "strength": 1},
+  {"text": "Aucune tentation ne vous est survenue qui n'ait été humaine ; et Dieu est fidèle, qui ne permettra pas que vous soyez tentés au-delà de ce que vous pouvez supporter, mais avec la tentation il fera aussi l'issue, afin que vous puissiez la supporter.", "reference": "1 Corinthiens 10:13", "theme": "La victoire sur le péché", "strength": 1},
+  {"text": "Christ nous a placés dans la liberté en nous affranchissant ; tenez-vous donc fermes, et ne soyez pas de nouveau retenus sous un joug de servitude.", "reference": "Galates 5:1", "theme": "La victoire sur le péché", "strength": 1},
+  {"text": "Je suis crucifié avec Christ ; et je ne vis plus, moi, mais Christ vit en moi ; et ce que je vis maintenant dans la chair, je le vis dans la foi, la foi au Fils de Dieu, qui m'a aimé et qui s'est livré lui-même pour moi.", "reference": "Galates 2:20", "theme": "La victoire sur le péché", "strength": 1},
+  {"text": "Parce que tout ce qui est né de Dieu est victorieux du monde ; et c'est ici la victoire qui a vaincu le monde, savoir notre foi.", "reference": "1 Jean 5:4", "theme": "La victoire sur le péché", "strength": 1},
+
+  // 14. Baptême et plénitude du Saint-Esprit
+  {"text": "Combien plus le Père qui est du ciel donnera-t-il l'Esprit-Saint à ceux qui le lui demandent.", "reference": "Luc 11:13", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+  {"text": "Et en la dernière journée, la grande journée de la fête, Jésus se tint là et cria, disant : Si quelqu'un a soif, qu'il vienne à moi, et qu'il boive. Celui qui croit en moi, selon ce qu'a dit l'Écriture, des fleuves d'eau vive couleront de son ventre.", "reference": "Jean 7:37-39", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+  {"text": "Je voudrais seulement apprendre ceci de vous : avez-vous reçu l'Esprit sur le principe des œuvres de loi, ou de l'écoute de la foi ?", "reference": "Galates 3:2", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+  {"text": "Celui donc qui vous fournit l'Esprit et qui opère des miracles au milieu de vous, le fait-il sur le principe des œuvres de loi, ou de l'écoute de la foi ?", "reference": "Galates 3:5", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+  {"text": "Et Paul leur ayant imposé les mains, l'Esprit-Saint vint sur eux et ils parlèrent en langues et prophétisèrent.", "reference": "Actes 19:6", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+  {"text": "Et les disciples étaient remplis de joie et de l'Esprit-Saint.", "reference": "Actes 13:52", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+  {"text": "Dieu rend témoignage avec eux par des signes et des prodiges, et par divers miracles et distributions de l'Esprit-Saint, selon sa propre volonté.", "reference": "Hébreux 2:4", "theme": "Baptême et plénitude du Saint-Esprit", "strength": 1},
+
+  // 15. La guérison divine
+  {"text": "Je suis l'Éternel qui te guérit.", "reference": "Exode 15:26", "theme": "La guérison divine", "strength": 1},
+  {"text": "Certainement, lui, a porté nos infirmités, et s'est chargé de nos douleurs ; mais il a été blessé pour nos transgressions, il a été meurtri pour nos iniquités ; le châtiment de notre paix a été sur lui, et par ses meurtrissures nous sommes guéris.", "reference": "Ésaïe 53:4-5", "theme": "La guérison divine", "strength": 1},
+  {"text": "Par la meurtrissure duquel vous avez été guéris.", "reference": "1 Pierre 2:24", "theme": "La guérison divine", "strength": 1},
+  {"text": "Mon âme, bénis l'Éternel, et n'oublie aucun de ses bienfaits. C'est lui qui pardonne toutes tes iniquités, qui guérit toutes tes infirmités.", "reference": "Psaume 103:2-3", "theme": "La guérison divine", "strength": 1},
+  {"text": "Qui rassasie de biens ta vieillesse ; ta jeunesse se renouvelle comme celle de l'aigle.", "reference": "Psaume 103:5", "theme": "La guérison divine", "strength": 1},
+  {"text": "Éternel, mon Dieu ! J'ai crié à toi, et tu m'as guéri.", "reference": "Psaume 30:2", "theme": "La guérison divine", "strength": 1},
+  {"text": "Je me coucherai, et aussi je dormirai en paix ; car toi seul, ô Éternel ! Tu me fais habiter en sécurité.", "reference": "Psaume 4:8", "theme": "La guérison divine", "strength": 1},
+  {"text": "Et si l'Esprit de celui qui a ressuscité Jésus d'entre les morts habite en vous, celui qui a ressuscité le Christ vivifiera vos corps mortels aussi, à cause de son Esprit qui habite en vous.", "reference": "Romains 8:11", "theme": "La guérison divine", "strength": 1},
+  {"text": "Alors ta lumière jaillira comme l'aurore et ta santé germera promptement, et ta justice marchera devant toi, la gloire de l'Éternel sera ton arrière-garde.", "reference": "Ésaïe 58:8", "theme": "La guérison divine", "strength": 1},
+  {"text": "Il donne de la force à celui qui est las, et il augmente l'énergie à celui qui n'a pas de vigueur.", "reference": "Ésaïe 40:29", "theme": "La guérison divine", "strength": 1},
+  {"text": "Mais ceux qui s'attendent à l'Éternel renouvelleront leur force ; ils s'élèveront avec des ailes, comme des aigles ; ils courront et ne se fatigueront pas, ils marcheront et ne se lasseront pas.", "reference": "Ésaïe 40:31", "theme": "La guérison divine", "strength": 1},
+  {"text": "Mon fils, n'oublie pas mon enseignement, et que ton cœur garde mes commandements ; car ils t'ajouteront un prolongement de jours, et des années de vie, et la paix.", "reference": "Proverbes 3:1-2", "theme": "La guérison divine", "strength": 1},
+  {"text": "Ne sois pas sage à tes propres yeux ; crains l'Éternel et éloigne-toi du mal : ce sera la santé pour ton nombril, et un arrosage pour tes os.", "reference": "Proverbes 3:7-8", "theme": "La guérison divine", "strength": 1},
+  {"text": "Mon fils, sois attentif à mes paroles, incline ton oreille à mes discours. Qu'ils ne s'éloignent point de tes yeux ; garde-les au dedans de ton cœur ; car ils sont la vie de ceux qui les trouvent, et la santé de toute leur chair.", "reference": "Proverbes 4:20-22", "theme": "La guérison divine", "strength": 1},
+  {"text": "Et Jésus parcourait toute la Galilée, enseignant dans leurs synagogues, et prêchant l'Évangile du royaume, et guérissant toute sorte de maladies et toute sorte d'infirmités parmi le peuple. Et sa renommée se répandit dans toute la Syrie ; et on lui amena tous ceux qui se portaient mal, qui étaient affligés de diverses maladies et de divers tourments, et des démoniaques, et des lunatiques, et des paralytiques, et il les guérit.", "reference": "Matthieu 4:23-24", "theme": "La guérison divine", "strength": 1},
+  {"text": "Et Jésus allait par toutes les villes et par les villages, enseignant dans leurs synagogues, et prêchant l'Évangile du royaume, et guérissant toute maladie et toute infirmité.", "reference": "Matthieu 9:35", "theme": "La guérison divine", "strength": 1},
+  {"text": "Et ayant assemblé les douze, il leur donna puissance et autorité sur tous les démons, et le pouvoir de guérir les maladies. Et il les envoya prêcher le Royaume de Dieu et guérir les infirmes.", "reference": "Luc 9:1-2", "theme": "La guérison divine", "strength": 1},
+  {"text": "Et dans quelque ville que vous entriez et qu'on vous reçoive, mangez de ce qui sera mis devant vous, et guérissez les infirmes qui y seront, et dites-leur : Le Royaume de Dieu s'est approché de vous.", "reference": "Luc 10:8-9", "theme": "La guérison divine", "strength": 1},
+  {"text": "Et ce sont ici les signes qui accompagneront ceux qui auront cru : en mon nom ils chasseront les démons ; ils imposeront les mains aux infirmes, et ceux-ci se porteront bien.", "reference": "Marc 16:17-18", "theme": "La guérison divine", "strength": 1},
+  {"text": "Quelqu'un parmi vous est-il malade, qu'il appelle les anciens de l'assemblée, et qu'ils prient pour lui en l'oignant d'huile au nom du Seigneur ; et la prière de la foi sauvera le malade, et le Seigneur le relèvera.", "reference": "Jacques 5:14-15", "theme": "La guérison divine", "strength": 1},
+
+  // 16. Victoire sur les puissances des ténèbres
+  {"text": "Voici, je vous donne l'autorité de marcher sur les serpents et sur les scorpions et sur toute la puissance de l'ennemi ; et rien ne vous nuira.", "reference": "Luc 10:19", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Ayant dépouillé les principautés et les autorités, il les a produites en public, triomphant d'elles en la croix.", "reference": "Col 2:15", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Soumettez-vous donc à Dieu. Résistez au diable, et il s'enfuira loin de vous.", "reference": "Jacq 4:7", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Tu marcheras sur le lion et sur l'aspic, tu fouleras le lionceau et le dragon.", "reference": "Ps 91:13", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Pour vous, enfants, vous êtes de Dieu, et vous les avez vaincus, parce que celui qui est en vous est plus grand que celui qui est dans le monde.", "reference": "1 Jean 4:4", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Qui nous a délivrés du pouvoir des ténèbres, et nous a transportés dans le Royaume du Fils de son amour.", "reference": "Col 1:13", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Que dirons-nous donc à ces choses ? Si Dieu est pour nous qui sera contre nous ?", "reference": "Ro 8:31", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "L'Éternel est ma lumière et mon salut: de qui aurai-je peur? L'Éternel est la force de ma vie : de qui aurai-je frayeur ?", "reference": "Ps 27:1", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "L'Éternel te gardera de tout mal; il gardera ton âme. L'Éternel gardera ta sortie et ton entrée, dès maintenant et à toujours.", "reference": "Ps 121:7-8", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Mais je te donnerai ta vie pour butin, dans tous les lieux où tu iras.", "reference": "Jér 45:5", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Et voici, je suis avec toi ; et je te garderai partout où tu iras.", "reference": "Gen 28:15", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Mais le Seigneur est fidèle, qui vous affermira et vous gardera du méchant.", "reference": "2 Thess 3:3", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Aucun instrument formé contre toi ne réussira, et toute langue qui se lèvera contre toi en jugement, tu la condamneras. C'est là l'héritage des serviteurs de l'Éternel, et leur justice est de par moi, dit l'Éternel.", "reference": "És 54:17", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Quand l'ennemi viendra comme un fleuve, l'Esprit de l'Éternel lèvera un étendard contre lui.", "reference": "És 59:19", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Et ayant assemblé les douze, il leur donna puissance et autorité sur tous les démons, et le pouvoir de guérir les maladies. Et il les envoya prêcher le Royaume de Dieu et guérir les infirmes.", "reference": "Luc 9:1-2", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Et étant partis, ils prêchèrent qu'on se repentît, et chassèrent beaucoup de démons, et oignirent d'huile beaucoup d'infirmes et les guérirent.", "reference": "Marc 6:12-13", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+  {"text": "Et ce sont ici les signes qui accompagneront ceux qui auront cru : en mon nom ils chasseront les démons ; ils imposeront les mains aux infirmes, et ceux-ci se porteront bien.", "reference": "Marc 16:17-18", "theme": "Victoire sur les puissances des ténèbres", "strength": 1},
+
+  // 17. Plus que vainqueur
+  {"text": "Au contraire, dans toutes ces choses, nous sommes plus que vainqueurs par Celui qui nous a aimés.", "reference": "Ro 8:37", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Mais nous savons que toutes choses travaillent ensemble pour le bien de ceux qui aiment Dieu, de ceux qui sont appelés selon Son propos.", "reference": "Ro 8:28", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Car je suis assuré que ni mort, ni vie, ni anges, ni principautés, ni choses présentes, ni choses à venir, ni puissances, ni hauteur, ni profondeur, ni aucune autre créature, ne pourra nous séparer de l'amour de Dieu, qui est dans le Christ Jésus, notre Seigneur.", "reference": "Ro 8:38-39", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Or, grâces à Dieu qui nous mène toujours en triomphe dans le Christ et manifeste par nous l'odeur de sa connaissance en tout lieu.", "reference": "2Co 2:14", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Mais grâces à Dieu, qui nous donne la victoire par notre Seigneur Jésus-Christ.", "reference": "1Co 15:57", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Vous, vous aviez pensé du mal contre moi : Dieu l'a pensé en bien, pour faire comme il en est aujourd'hui, afin de conserver la vie à un grand peuple.", "reference": "Gen 50:20", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Tu seras béni en entrant, et tu seras béni en sortant.", "reference": "Deut 28:6", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "L'Éternel commandera à la bénédiction d'être avec toi, dans tes greniers et dans tout ce à quoi tu mettras ta main ; et il te bénira dans le pays que l'Éternel, ton Dieu, te donne.", "reference": "Deut 28:8", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Ne crains point, car je suis avec toi ; ne sois pas inquiet, car moi je suis ton Dieu. Je te fortifierai ; oui, je t'aiderai ; oui, Je te soutiendrai par la droite de ma justice.", "reference": "És 41:10", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Remets ta voie sur l'Éternel, et confie-toi en Lui ; et Lui, Il agira.", "reference": "Ps 37:5", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Demeure tranquille, appuyé sur l'Éternel, et attends toi à Lui.", "reference": "Ps 37:7", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Fortifiez-vous, et que votre cœur soit ferme, vous tous qui avez votre attente en l'Éternel.", "reference": "Ps 31:24", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Veillez, tenez ferme dans la foi; soyez hommes, affermissez-vous.", "reference": "1Co 16:13", "theme": "Plus que vainqueur", "strength": 1},
+  {"text": "Je crierai au Dieu Très-haut, à Dieu qui mène tout à bonne fin pour moi.", "reference": "Ps 57:2", "theme": "Plus que vainqueur", "strength": 1},
+
+  // 18. Église dans les lieux célestes
+  {"text": "L'assemblée, qui est son corps, la plénitude de celui qui remplit tout en tous.", "reference": "Éph 1:22-23", "theme": "Église dans les lieux célestes", "strength": 1},
+  {"text": "Les yeux de votre cœur étant éclairés, pour que vous sachiez quelle est l'espérance de son appel et quelles sont les richesses de la gloire de son héritage dans les saints.", "reference": "Éph 1:18", "theme": "Église dans les lieux célestes", "strength": 1},
+  {"text": "Afin que la sagesse si diverse de Dieu soit maintenant donnée à connaître aux principautés et aux autorités dans les lieux célestes, par l'assemblée.", "reference": "Éph 3:10", "theme": "Église dans les lieux célestes", "strength": 1},
+  {"text": "En qui, vous aussi, vous êtes édifiés ensemble, pour être une habitation de Dieu par l'Esprit.", "reference": "Éph 2:22", "theme": "Église dans les lieux célestes", "strength": 1},
+  {"text": "Béni soit le Dieu et Père de notre Seigneur Jésus-Christ, qui nous a bénis de toute bénédiction spirituelle dans les lieux célestes en Christ.", "reference": "Éph 1:3", "theme": "Église dans les lieux célestes", "strength": 1},
+  {"text": "À lui gloire dans l'assemblée dans le Christ Jésus, pour toutes les générations du siècle des siècles ! Amen.", "reference": "Éph 3:21", "theme": "Église dans les lieux célestes", "strength": 1},
+
+  // 19. Allez évangéliser
+  {"text": "Allez dans tout le monde, et prêchez l'Évangile à toute la création.", "reference": "Marc 16:15", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Allez donc, et faites disciples toutes les nations, les baptisant pour le nom du Père et du Fils et du Saint-Esprit, leur enseignant à garder toutes les choses que je vous ai commandées.", "reference": "Matt 28:19-20", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Je parlerai de la magnificence glorieuse de ta majesté, et de tes actes merveilleux.", "reference": "Ps 145:5", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Je célébrerai l'Éternel de tout mon cœur ; je raconterai toutes Tes merveilles. Je me réjouirai et je m'égayerai en Toi; je chanterai Ton nom, ô Très-haut!", "reference": "Ps 9:1-2", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Jette ton pain sur la face des eaux, car tu le trouveras après bien des jours.", "reference": "Eccl 11:1", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Marchez dans la sagesse envers ceux de dehors, saisissant l'occasion. Que votre parole soit toujours dans un esprit de grâce, assaisonnée de sel, afin que vous sachiez comment vous devez répondre à chacun.", "reference": "Col 4:5-6", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Crois au Seigneur Jésus, et tu seras sauvé, toi et ta maison.", "reference": "Act 16:31", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Va dans ta maison, vers les tiens, et raconte leur tout ce que le Seigneur t'a fait, et comment il a usé de miséricorde envers toi.", "reference": "Marc 5:19", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Allez donc dans les carrefours des chemins, et autant de gens que vous trouverez, conviez-les aux noces.", "reference": "Matt 22:9", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Et eux, étant partis prêchèrent partout, le Seigneur coopérant avec eux, et confirmant la parole par les signes qui l'accompagnaient.", "reference": "Marc 16:20", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Et, partant, ils parcouraient tous les villages, évangélisant et guérissant partout.", "reference": "Luc 9:6", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Comment je n'ai rien caché des choses qui étaient profitables, en sorte que je ne vous aie pas prêché et enseigné publiquement et dans les maisons.", "reference": "Act 20:20", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Le fruit du juste est un arbre de vie, et le sage gagne les âmes.", "reference": "Pro 11:30", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Le temps est accompli, et le royaume de Dieu s'est approché : repentez-vous et croyez à l'Évangile.", "reference": "Marc 1:15", "theme": "Allez évangéliser", "strength": 1},
+  {"text": "Repentez-vous, et que chacun de vous soit baptisé au nom de Jésus-Christ, en rémission des péchés ; et vous recevrez le don du Saint-Esprit.", "reference": "Act 2:38", "theme": "Allez évangéliser", "strength": 1},
+
+  // 20. Organisation de l'Église
+  {"text": "Et Lui, a donné les uns comme apôtres, les autres comme prophètes, les autres comme évangélistes, les autres comme pasteurs et docteurs ; en vue du perfectionnement des saints, pour l'œuvre du service, pour l'édification du Corps de Christ.", "reference": "Éph 4:11-12", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Et leur ayant choisi des anciens dans chaque assemblée, ils prièrent avec jeûne, et les recommandèrent au Seigneur en qui ils avaient cru.", "reference": "Act 14:23", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Paul et Timothée, esclaves de Jésus-Christ, à tous les saints dans le Christ Jésus qui sont à Philippes avec les surveillants et les serviteurs.", "reference": "Phil 1:1", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Prenez donc garde à vous-mêmes, et à tout le troupeau au milieu duquel l'Esprit-Saint vous a établis surveillants pour paître l'assemblée de Dieu, laquelle il a acquise par le sang de son propre Fils.", "reference": "Act 20:28", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Or nous vous prions, frères, de reconnaître ceux qui travaillent parmi vous, et qui sont à la tête parmi vous dans le Seigneur, et qui vous avertissent.", "reference": "1 Thess 5:12", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Que les anciens qui président correctement soient estimés dignes d'un double honneur, spécialement ceux qui travaillent dans la parole et l'enseignement.", "reference": "1 Tim 5:17", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Toi donc, mon enfant, fortifie-toi dans la grâce qui est dans le Christ Jésus ; et les choses que tu as entendues de moi devant plusieurs témoins, confie-les à des personnes fidèles qui soient capables d'instruire aussi les autres.", "reference": "2 Tim 2:1-2", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Donnez, et il vous sera donné : on vous donnera dans le sein bonne mesure, pressée et secouée, et qui débordera ; car de la même mesure dont vous mesurerez, on vous mesurera en retour.", "reference": "Luc 6:38", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Que chacun fasse selon qu'il se l'est proposé dans son cœur, non à regret, ou par contrainte, car Dieu aime celui qui donne joyeusement.", "reference": "2 Co 9:7", "theme": "Organisation de l'Église", "strength": 1},
+  {"text": "Les assemblées donc étaient affermies dans la foi et croissaient en nombre chaque jour.", "reference": "Act 16:5", "theme": "Organisation de l'Église", "strength": 1},
+
+  // 21. Retour de Jésus et fin des temps
+  {"text": "Et cet Évangile du Royaume sera prêché dans la terre habitée tout entière, en témoignage à toutes les nations ; et alors viendra la fin.", "reference": "Matt 24:14", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Mais comme ont été les jours de Noé, ainsi sera aussi la venue du fils de l'homme. Car, comme dans les jours avant le déluge on mangeait et on buvait, on se mariait et on donnait en mariage, jusqu'au jour où Noé entra dans l'arche, et ils ne connurent rien, jusqu'à ce que le déluge vint et les emporta tous, ainsi sera aussi la venue du fils de l'homme.", "reference": "Matt 24:37-39", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Et prenez garde à vous-mêmes, de peur que vos cœurs ne soient appesantis par la gourmandise et l'ivrognerie, et par les soucis de la vie, et que ce jour-là ne vous surprenne inopinément ; car il viendra comme un filet sur tous ceux qui habitent sur la face de toute la terre.", "reference": "Luc 21:34-35", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Car le Seigneur lui-même, avec un cri de commandement, avec une voix d'archange, et avec la trompette de Dieu, descendra du ciel ; et les morts en Christ ressusciteront premièrement; puis nous, les vivants qui demeurons, nous serons ravis ensemble avec eux dans les nuées à la rencontre du Seigneur, en l'air; et ainsi nous serons toujours avec le Seigneur.", "reference": "1 Thess 4:16-17", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Mais, selon sa promesse, nous attendons de nouveaux cieux et une nouvelle terre, dans lesquels la justice habite.", "reference": "2 Pi 3:13", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Or le jour du Seigneur viendra comme un voleur ; et, dans ce jour-là, les cieux passeront avec un bruit sifflant, et les éléments embrasés seront dissous, et la terre et les œuvres, qui sont en elle, seront brûlées entièrement.", "reference": "2 Pi 3:10", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Et je vis un nouveau ciel et une nouvelle terre ; car le premier ciel et la première terre s'en étaient allés, et la mer n'est plus.", "reference": "Apo 21:1", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+  {"text": "Et je vis la sainte cité, nouvelle Jérusalem, descendant du ciel d'auprès de Dieu, préparée comme une épouse ornée pour son mari. Et j'entendis une grande voix venant du ciel, disant : Voici, l'habitation de Dieu est avec les hommes, et il habitera avec eux ; et ils seront son peuple, et Dieu lui-même sera avec eux, leur Dieu.", "reference": "Apo 21:1-2", "theme": "Retour de Jésus et fin des temps", "strength": 1},
+
+];
+
+let currentCard;
+let mode = "refToText";
+let filteredCards = cards;
+let seenCards = 0;
+
+function applyTheme() {
+  const selected = document.getElementById("themeSelect").value;
+  if (selected === "all") filteredCards = cards;
+  else filteredCards = cards.filter(c => c.theme === selected);
+  seenCards = 0;
+  loadCard();
+}
+
+function setMode(m) {
+  mode = m;
+  loadCard();
+}
+
+// Tirage pondéré selon la force
+function getNextCard() {
+  if (filteredCards.length === 0) return null;
+  const totalWeight = filteredCards.reduce((acc, c) => acc + (1 / c.strength), 0);
+  let r = Math.random() * totalWeight;
+  for (let c of filteredCards) {
+    r -= (1 / c.strength);
+    if (r <= 0) return c;
+  }
+  return filteredCards[0];
+}
+
+function loadCard() {
+  if (filteredCards.length === 0) return;
+  currentCard = getNextCard();
+  const q = document.getElementById("question");
+  const a = document.getElementById("answers");
+  a.innerHTML = "";
+
+  q.textContent = (mode === "textToRef" ? currentCard.text : currentCard.reference);
+
+  const btn = document.createElement("button");
+  btn.textContent = "Afficher la réponse";
+  btn.onclick = showAnswer;
+  a.appendChild(btn);
+
+  document.getElementById("nextBtn").style.display = "none";
+
+  updateProgress();
+}
+
+function showAnswer() {
+  const a = document.getElementById("answers");
+  let answerText = (mode === "textToRef") ? currentCard.reference : currentCard.text;
+
+  a.innerHTML = `Réponse : <strong>${answerText}</strong><br><br>
+    <button class='small-btn' onclick='gradeCard(true)'>J'ai bien retenu 👍</button>
+    <button class='small-btn' onclick='gradeCard(false)'>J'ai oublié 👎</button>`;
+}
+
+function gradeCard(success) {
+  if (success) currentCard.strength = Math.min(currentCard.strength + 1, 10);
+  else currentCard.strength = Math.max(currentCard.strength - 1, 1);
+  showFeedback(success);
+  seenCards++;
+}
+
+function showFeedback(success) {
+  const a = document.getElementById("answers");
+  const div = document.createElement("div");
+  div.className = 'feedback ' + (success ? 'correct' : 'incorrect');
+  div.textContent = success ? 'Bien joué !' : 'Ne t’inquiète pas, essaie encore.';
+  a.appendChild(div);
+  document.getElementById("nextBtn").style.display = "block";
+}
+
+function updateProgress() {
+  const p = document.getElementById("progress");
+  p.textContent = `Versets vues : ${seenCards} / ${filteredCards.length}`;
+}
+
+// Initialisation
+loadCard();
+document.getElementById("nextBtn").onclick = () => loadCard();
+
+</script>
+
+</body>
+</html>
