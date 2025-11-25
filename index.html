@@ -337,6 +337,7 @@ let currentCard;
 let mode = "refToText";
 let filteredCards = cards;
 let seenCards = 0;
+let lastCard = null;
 
 function applyTheme() {
   const selected = document.getElementById("themeSelect").value;
@@ -354,12 +355,34 @@ function setMode(m) {
 // Tirage pondéré selon la force
 function getNextCard() {
   if (filteredCards.length === 0) return null;
-  const totalWeight = filteredCards.reduce((acc, c) => acc + (1 / c.strength), 0);
-  let r = Math.random() * totalWeight;
-  for (let c of filteredCards) {
-    r -= (1 / c.strength);
-    if (r <= 0) return c;
+
+  // Pondération
+  const weights = filteredCards.map(c => 1 / c.strength);
+  const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+
+  let candidate = null;
+
+  // Boucle pour éviter que le même verset retombe
+  for (let attempts = 0; attempts < 10; attempts++) {
+    let r = Math.random() * totalWeight;
+
+    for (let i = 0; i < filteredCards.length; i++) {
+      r -= weights[i];
+      if (r <= 0) {
+        candidate = filteredCards[i];
+        break;
+      }
+    }
+
+    // Si ce n'est pas le même que le précédent → OK
+    if (candidate && candidate !== lastCard) {
+      lastCard = candidate; // enregistrer le dernier verset affiché
+      return candidate;
+    }
   }
+
+  // Si on n'a pas réussi après 10 tentatives (rare), on renvoie quand même quelque chose
+  lastCard = filteredCards[0];
   return filteredCards[0];
 }
 
@@ -392,8 +415,9 @@ function showAnswer() {
 }
 
 function gradeCard(success) {
-  if (success) currentCard.strength = Math.min(currentCard.strength + 1, 10);
-  else currentCard.strength = Math.max(currentCard.strength - 1, 1);
+  if (success) currentCard.strength = Math.min(currentCard.strength + 0.5, 10);
+  else currentCard.strength = Math.max(currentCard.strength - 1.5, 1);
+  saveStrengths();
   showFeedback(success);
   seenCards++;
 }
@@ -412,7 +436,29 @@ function updateProgress() {
   p.textContent = `Versets vues : ${seenCards} / ${filteredCards.length}`;
 }
 
+function saveStrengths() {
+  let data = {};
+  cards.forEach(c => {
+    data[c.reference] = c.strength;
+  });
+  localStorage.setItem("bibleStrengths", JSON.stringify(data));
+}
+
+function loadStrengths() {
+  const saved = localStorage.getItem("bibleStrengths");
+  if (!saved) return;
+
+  const data = JSON.parse(saved);
+
+  cards.forEach(c => {
+    if (data[c.reference]) {
+      c.strength = data[c.reference];
+    }
+  });
+}
+
 // Initialisation
+loadStrengths();
 loadCard();
 document.getElementById("nextBtn").onclick = () => loadCard();
 
